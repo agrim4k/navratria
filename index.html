@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Navratri Mahotsav | Divine Quiz</title>
+  
+  <link href="https://api.fontshare.com/v2/css?f[]=clash-display@200,400,600,700&f[]=satoshi@300,400,500,700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    :root {
+      --bg-base: #0c0814;
+      --bg-surface: #171026;
+      --text-primary: #ffffff;
+      --text-secondary: #a39bb8;
+      --accent-primary: #ff7700;
+      --accent-glow: rgba(255, 119, 0, 0.35);
+      --color-correct: #00ff88;
+      --color-correct-glow: rgba(0, 255, 136, 0.15);
+      --color-wrong: #ff4d4d;
+      --color-wrong-glow: rgba(255, 77, 77, 0.15);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --glass-bg: rgba(23, 16, 38, 0.65);
+      --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+      --font-display: 'Clash Display', sans-serif;
+      --font-body: 'Satoshi', sans-serif;
+      --transition-smooth: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-body);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+    }
+
+    .ambient-orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      z-index: -1;
+      opacity: 0.5;
+    }
+    .orb-1 { width: 40vw; height: 40vw; background: var(--accent-glow); top: -10%; left: -10%; }
+    .orb-2 { width: 30vw; height: 30vw; background: rgba(220, 38, 38, 0.15); bottom: 10%; right: -5%; }
+
+    .header {
+      position: fixed;
+      top: 0;
+      width: 100%;
+      padding: 1.2rem 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--glass-bg);
+      backdrop-filter: blur(16px);
+      border-bottom: var(--glass-border);
+      z-index: 100;
+    }
+    .logo { font-size: 1.4rem; font-family: var(--font-display); font-weight: 700; letter-spacing: 1px; }
+    .logo span { color: var(--accent-primary); }
+
+    .quiz-card {
+      width: 100%;
+      max-width: 680px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      border: var(--glass-border);
+      border-radius: 24px;
+      padding: 2.5rem;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      margin-top: 80px;
+      position: relative;
+    }
+
+    .quiz-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    .q-count { color: var(--text-secondary); font-size: 0.9rem; text-transform: uppercase; letter-spacing: 1px; }
+    
+    .progress-bar-container {
+      width: 100%;
+      height: 6px;
+      background: var(--border-color);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 2rem;
+    }
+    .progress-fill {
+      height: 100%;
+      width: 10%;
+      background: var(--accent-primary);
+      transition: var(--transition-smooth);
+    }
+
+    .question-title {
+      font-family: var(--font-display);
+      font-size: 1.4rem;
+      line-height: 1.4;
+      margin-bottom: 1.8rem;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .option-btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 1.2rem 1.5rem;
+      border-radius: 14px;
+      font-size: 1rem;
+      text-align: left;
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .option-btn:hover:not(.disabled) {
+      background: rgba(255, 119, 0, 0.08);
+      border-color: var(--accent-primary);
+      transform: translateX(4px);
+    }
+
+    .option-btn.disabled {
+      cursor: default;
+    }
+
+    /* Option Highlight States */
+    .option-btn.user-correct {
+      background: var(--color-correct-glow) !important;
+      border-color: var(--color-correct) !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+    .option-btn.user-correct i { color: var(--color-correct); }
+
+    .option-btn.user-wrong {
+      background: var(--color-wrong-glow) !important;
+      border-color: var(--color-wrong) !important;
+      color: #ffffff !important;
+      font-weight: 700;
+    }
+    .option-btn.user-wrong i { color: var(--color-wrong); }
+
+    .option-btn.correct-reveal {
+      border-color: var(--color-correct) !important;
+      color: var(--color-correct) !important;
+      font-weight: 700;
+    }
+    .option-btn.correct-reveal i { color: var(--color-correct); }
+
+    /* Answer Banner */
+    .answer-banner {
+      display: none;
+      border-radius: 14px;
+      padding: 1.2rem;
+      margin-top: 1.5rem;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+    .answer-banner.correct-banner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--color-correct-glow);
+      border: 1px solid var(--color-correct);
+      color: #ffffff;
+    }
+    .answer-banner.wrong-banner {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--color-wrong-glow);
+      border: 1px solid var(--color-wrong);
+      color: #ffffff;
+    }
+    .banner-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 700;
+      font-size: 1.05rem;
+    }
+    .correct-banner .banner-title { color: var(--color-correct); }
+    .wrong-banner .banner-title { color: var(--color-wrong); }
+
+    .quiz-footer {
+      margin-top: 2rem;
+      display: flex;
+      justify-content: flex-end;
+    }
+
+    .btn-action {
+      background: var(--accent-primary);
+      color: #000;
+      padding: 0.9rem 2rem;
+      border: none;
+      border-radius: 12px;
+      font-weight: 700;
+      font-family: var(--font-body);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      box-shadow: 0 0 20px var(--accent-glow);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-action:hover { transform: translateY(-2px); box-shadow: 0 0 30px var(--accent-glow); }
+    .btn-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    .result-view {
+      display: none;
+      text-align: center;
+    }
+    .result-view h2 { font-family: var(--font-display); font-size: 2.2rem; margin-bottom: 0.5rem; }
+    
+    .score-breakdown {
+      display: flex;
+      justify-content: center;
+      margin: 1.5rem 0;
+    }
+
+    .score-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.5rem 2.5rem;
+    }
+
+    .score-box .val {
+      font-size: 2.5rem;
+      font-family: var(--font-display);
+      font-weight: 700;
+      color: var(--accent-primary);
+    }
+    .score-box .lbl {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .action-group {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="ambient-orb orb-1"></div>
+  <div class="ambient-orb orb-2"></div>
+
+  <nav class="header">
+    <div class="logo"><i class="fa-solid fa-om"></i> <span>NAVRATRI</span></div>
+  </nav>
+
+  <main class="quiz-card">
+    <div id="quizView">
+      <div class="quiz-header">
+        <span class="q-count" id="questionCounter">Question 1 of 10</span>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+
+      <h3 class="question-title" id="questionText">Loading question...</h3>
+
+      <div class="options-grid" id="optionsContainer"></div>
+
+      <!-- Detail Answer Banner -->
+      <div class="answer-banner" id="answerBanner">
+        <div class="banner-title" id="bannerTitle"></div>
+        <div id="bannerBody"></div>
+      </div>
+
+      <div class="quiz-footer">
+        <button class="btn-action" id="nextBtn" disabled onclick="nextQuestion()">Next Question</button>
+      </div>
+    </div>
+
+    <!-- Completion Result View -->
+    <div id="resultView" class="result-view">
+      <h2>Quiz Complete!</h2>
+      <p style="color: var(--text-secondary);">Here is your final score for the Navratri Quiz.</p>
+      
+      <div class="score-breakdown">
+        <div class="score-box">
+          <div class="val"><span id="finalScore">0</span> / <span id="totalQuestions">10</span></div>
+          <div class="lbl">Correct Answers</div>
+        </div>
+      </div>
+      
+      <div class="action-group">
+        <a href="#" onclick="location.reload()" class="btn-action">
+          <i class="fa-solid fa-rotate-right"></i> Try Again
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    // Master Navratri Question Pool
+    const questionPool = [
+      { q: "What does the Sanskrit word 'Navratri' literally translate to?", options: ["Nine nights", "Nine days", "Nine goddesses", "Nine lights"], correct: 0 },
+      { q: "Which form of Goddess Durga is worshipped on the 1st day of Navratri?", options: ["Maa Brahmacharini", "Maa Shailaputri", "Maa Chandraghanta", "Maa Kushmanda"], correct: 1 },
+      { q: "Which demon did Goddess Durga defeat, leading to the celebration of Vijayadashami?", options: ["Ravana", "Mahishasura", "Bhasmasura", "Tarakasura"], correct: 1 },
+      { q: "Which traditional folk dance originates from Gujarat and is widely performed during Navratri nights?", options: ["Bhangra", "Kathak", "Garba", "Ghoomar"], correct: 2 },
+      { q: "What is the name of the sacred ritualistic pot installed on the first day of Navratri?", options: ["Kalash / Ghat", "Diya", "Trishul", "Havan Kund"], correct: 0 },
+      { q: "Which manifestation of Goddess Durga is credited with creating the universe with her divine smile?", options: ["Maa Katyayani", "Maa Kushmanda", "Maa Skandamata", "Maa Siddhidatri"], correct: 1 },
+      { q: "What is the primary vehicle (vahana) associated with Goddess Shailaputri?", options: ["Lion", "Tiger", "Bull (Nandi)", "Donkey"], correct: 2 },
+      { q: "The ritual of worshipping young girls on the 8th or 9th day of Navratri is known as what?", options: ["Ghatasthapana", "Kanya Pujan", "Dandiya Raas", "Ayudha Puja"], correct: 1 },
+      { q: "Which avatar of Maa Durga is depicted holding Lord Kartikeya (Skanda) in her lap?", options: ["Maa Skandamata", "Maa Brahmacharini", "Maa Mahagauri", "Maa Kalaratri"], correct: 0 },
+      { q: "Which form of Goddess Durga, revered on the 7th day, is considered her fiercest and dark-complexioned manifestation?", options: ["Maa Chandraghanta", "Maa Kalaratri", "Maa Siddhidatri", "Maa Katyayani"], correct: 1 },
+      { q: "Which form of Goddess Durga represents severe penance, walking barefoot holding a rosary and water pot?", options: ["Maa Brahmacharini", "Maa Mahagauri", "Maa Shailaputri", "Maa Kushmanda"], correct: 0 },
+      { q: "What instrument is traditionally used alongside Garba during Navratri dance celebrations?", options: ["Dandiya sticks", "Flute", "Sitar", "Tabla"], correct: 0 },
+      { q: "The 10th day following the nine nights of Navratri is celebrated as which festival?", options: ["Diwali", "Vijayadashami / Dussehra", "Maha Shivratri", "Holi"], correct: 1 },
+      { q: "Which form of Goddess Durga is worshipped on the 8th day, symbolizing extreme purity and a radiant white complexion?", options: ["Maa Mahagauri", "Maa Katyayani", "Maa Siddhidatri", "Maa Chandraghanta"], correct: 0 },
+      { q: "Which Goddess is worshipped on the 9th day for bestowing all spiritual powers (siddhis)?", options: ["Maa Siddhidatri", "Maa Skandamata", "Maa Brahmacharini", "Maa Kushmanda"], correct: 0 },
+      { q: "What is the arrangement of dolls on stepped platforms called during Navratri celebrations in Southern India?", options: ["Golu / Kolu", "Garba", "Ramlila", "Pandal"], correct: 0 }
+    ];
+
+    // Helper: Fisher-Yates Array Shuffle Algorithm
+    function shuffleArray(array) {
+      const shuffled = [...array];
+      for (let i = shuffled.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+      }
+      return shuffled;
+    }
+
+    // Pick 10 random questions for each session
+    let questions = shuffleArray(questionPool).slice(0, 10);
+
+    let currentIdx = 0;
+    let selectedOption = null;
+    let isAnswered = false;
+    let totalScore = 0;
+
+    function renderQuestion() {
+      selectedOption = null;
+      isAnswered = false;
+      document.getElementById('nextBtn').disabled = true;
+
+      // Reset Answer Banner
+      const banner = document.getElementById('answerBanner');
+      banner.className = 'answer-banner';
+      banner.style.display = 'none';
+
+      const q = questions[currentIdx];
+      document.getElementById('questionCounter').innerText = `Question ${currentIdx + 1} of ${questions.length}`;
+      document.getElementById('progressFill').style.width = `${((currentIdx + 1) / questions.length) * 100}%`;
+      document.getElementById('questionText').innerText = q.q;
+
+      const container = document.getElementById('optionsContainer');
+      container.innerHTML = '';
+
+      // Shuffle options dynamically for each question
+      let optionIndices = q.options.map((_, idx) => idx);
+      optionIndices = shuffleArray(optionIndices);
+
+      optionIndices.forEach((originalIdx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.dataset.index = originalIdx;
+        btn.innerHTML = `<span>${q.options[originalIdx]}</span> <i class="fa-regular fa-circle"></i>`;
+        btn.onclick = () => processAnswer(originalIdx, btn);
+        container.appendChild(btn);
+      });
+    }
+
+    function processAnswer(userChosenIdx, clickedBtn) {
+      if (isAnswered) return;
+      isAnswered = true;
+
+      selectedOption = userChosenIdx;
+      const correctIdx = questions[currentIdx].correct;
+      const userIsCorrect = userChosenIdx === correctIdx;
+
+      if (userIsCorrect) {
+        totalScore++;
+      }
+
+      // Highlight options on screen
+      const buttons = document.querySelectorAll('.option-btn');
+      buttons.forEach(btn => {
+        btn.classList.add('disabled');
+        const btnIdx = parseInt(btn.dataset.index);
+
+        if (btnIdx === userChosenIdx) {
+          if (userIsCorrect) {
+            btn.classList.add('user-correct');
+            btn.querySelector('i').className = 'fa-solid fa-circle-check';
+          } else {
+            btn.classList.add('user-wrong');
+            btn.querySelector('i').className = 'fa-solid fa-circle-xmark';
+          }
+        } else if (btnIdx === correctIdx && !userIsCorrect) {
+          btn.classList.add('correct-reveal');
+          btn.querySelector('i').className = 'fa-solid fa-circle-check';
+        } else {
+          btn.style.opacity = '0.4';
+        }
+      });
+
+      // Update Feedback Banner showing what you chose & correct answer
+      const banner = document.getElementById('answerBanner');
+      const bannerTitle = document.getElementById('bannerTitle');
+      const bannerBody = document.getElementById('bannerBody');
+
+      const chosenText = questions[currentIdx].options[userChosenIdx];
+      const correctText = questions[currentIdx].options[correctIdx];
+
+      if (userIsCorrect) {
+        banner.className = 'answer-banner correct-banner';
+        bannerTitle.innerHTML = `<i class="fa-solid fa-circle-check"></i> Correct!`;
+        bannerBody.innerHTML = `You chose: <strong>"${chosenText}"</strong> — Perfect answer!`;
+      } else {
+        banner.className = 'answer-banner wrong-banner';
+        bannerTitle.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> Incorrect`;
+        bannerBody.innerHTML = `
+          <div>You chose: <strong>"${chosenText}"</strong></div>
+          <div>Correct Answer: <strong>"${correctText}"</strong></div>
+        `;
+      }
+
+      document.getElementById('nextBtn').disabled = false;
+    }
+
+    function nextQuestion() {
+      currentIdx++;
+
+      if (currentIdx < questions.length) {
+        renderQuestion();
+      } else {
+        finishQuiz();
+      }
+    }
+
+    function finishQuiz() {
+      document.getElementById('quizView').style.display = 'none';
+      document.getElementById('resultView').style.display = 'block';
+
+      document.getElementById('finalScore').innerText = totalScore;
+      document.getElementById('totalQuestions').innerText = questions.length;
+    }
+
+    renderQuestion();
+  </script>
+</body>
+</html>
